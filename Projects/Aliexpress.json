@@ -1,0 +1,43 @@
+{
+    "projectSettings": {
+        "projectName": "Aliexpress"
+    },
+    "requestSettings": {
+        "domain": "aliexpress",
+        "method": "GET",
+        "url": "https://www.aliexpress.com/p/wallet-ui/index.html?spm=a2g0o.order_list",
+        "body": "",
+        "headers": {
+            "User-Agent": {
+                "enabled": true,
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/113.0"
+            },
+            "Accept": {
+                "enabled": true,
+                "value": "*/*"
+            },
+            "Content-Type": {
+                "enabled": true,
+                "value": "application/x-www-form-urlencoded"
+            },
+            "Referer": {
+                "enabled": false,
+                "value": ""
+            },
+            "X-Requested-With": {
+                "enabled": false,
+                "value": "XMLHttpRequest"
+            }
+        }
+    },
+    "parserSettings": {
+        "useParser": true,
+        "values": {
+            "value_1": {
+                "name": "status",
+                "valid_string": ">Sign Out<",
+                "method": "GET"
+            }
+        }
+    }
+}

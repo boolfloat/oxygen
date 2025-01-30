@@ -1,0 +1,50 @@
+{
+    "projectSettings": {
+        "projectName": "Epic Games"
+    },
+    "requestSettings": {
+        "domain": "epicgames.com",
+        "method": "GET",
+        "url": "https://www.epicgames.com/account/transactions",
+        "body": "",
+        "headers": {
+            "User-Agent": {
+                "enabled": true,
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/113.0"
+            },
+            "Accept": {
+                "enabled": true,
+                "value": "*/*"
+            },
+            "Content-Type": {
+                "enabled": true,
+                "value": "application/x-www-form-urlencoded"
+            },
+            "Referer": {
+                "enabled": false,
+                "value": ""
+            },
+            "X-Requested-With": {
+                "enabled": false,
+                "value": "XMLHttpRequest"
+            }
+        }
+    },
+    "parserSettings": {
+        "useParser": true,
+        "values": {
+            "value_1": {
+                "name": "status",
+                "valid_string": "\"email\"",
+                "method": "GET"
+            },
+            "value_2": {
+                "name": "plan",
+                "url": "https://www.epicgames.com/account/personal",
+                "after": "\"displayName\":{\"value\":\"",
+                "before": "\"},\"firstName\":",
+                "method": "GET"
+            }
+        }
+    }
+}
