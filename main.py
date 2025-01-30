@@ -9,7 +9,7 @@ from ctypes import c_int
 import oxyapi
 from fonts.IconsFontAwesome6 import IconsFontAwesome6 as icons
 from utils import logsearch, checker_lib
-import requests
+import webbrowser
 
 dwm = ctypes.windll.dwmapi
 
@@ -255,7 +255,7 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
                                 dpg.add_button(label="Browse", enabled=False)
                         dpg.add_separator()
                     dpg.add_text(f"Plugin API: {oxyapi.__version_major__}.{oxyapi.__version_minor__} | Load problems: {oxyapi._plugin_init_problems}")
-                    dpg.add_button(label="Documentation")
+                    dpg.add_button(label="Documentation", callback=lambda: webbrowser.open_new_tab("http://oxy.strnq.xyz/"))
                 for plugin in oxyapi.plugin_storage:
                     if plugin.setup_ui == None: continue
                     dpg.add_separator(label=plugin.name)
