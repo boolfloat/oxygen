@@ -10,6 +10,6 @@
  - [] Generate plugin from nodes (AFTER RELEASE)
 
 # Plugin system
- - [] Documentation (WHEN RELEASED)
+ - [+] Documentation (WHEN RELEASED)
  - [~] Node api
  - [] More events and features :)
