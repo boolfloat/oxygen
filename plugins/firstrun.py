@@ -18,8 +18,8 @@ def before_load():
     webbrowser.open_new_tab("https://lolz.live/threads/7766339/")
     webbrowser.open_new_tab("https://lolz.live/threads/7809122/")
 
-def setup_ui():
-    dpg.add_button(label="Test")
+# def setup_ui():
+#     dpg.add_button(label="Test")
 
 if __name__ == "__main__":
     raise ModuleNotFoundError()

@@ -8,7 +8,7 @@ import ctypes
 from ctypes import c_int
 import oxyapi
 from fonts.IconsFontAwesome6 import IconsFontAwesome6 as icons
-from utils import logsearch, checker_lib
+from utils import logsearch, checker_lib, node_manager
 import webbrowser
 
 dwm = ctypes.windll.dwmapi
@@ -41,6 +41,23 @@ viewport = dpg.create_viewport(title="Oxygen Checker",width=width,height=height,
 print("Loading api and plugins...")
 _t = time.time()
 oxyapi.__oxy__()
+
+class AccountNode(oxyapi.OxyNode):
+    def __init__(self):
+        super().__init__()
+        self.name = "Account"
+        self.description = "Base node"
+        self.attrs = [
+            oxyapi.OxyNodeAttr("Account", dpg.mvNode_Attr_Output),
+            oxyapi.OxyNodeAttr("Is valid", dpg.mvNode_Attr_Output),
+            oxyapi.OxyNodeAttr("Is invalid", dpg.mvNode_Attr_Output),
+        ]
+
+    @staticmethod
+    def call() -> tuple:
+        return (oxyapi._check_acc, oxyapi._check_acc_isValid, not oxyapi._check_acc_isValid)
+
+oxyapi.oxy_register_node(AccountNode(), "Account")
 
 for file in os.listdir("./plugins"):
     if not ".py" in file: continue
@@ -87,6 +104,7 @@ current_tab = 1
 def update_global():
     # current_time = f"tab 1 {time.time()}"
     # dpg.set_value("time_text", current_time)
+    # print(oxyapi._node_manager.connections)
     ...
 
 def cange_tab(tab_number):
@@ -98,15 +116,31 @@ def cange_tab(tab_number):
             dpg.configure_item(f"tab_{i}", show=False)
 
 def node_link_handler(sender, app_data):
-    print("LINK:",app_data)
-    dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+    out_attr, in_attr = app_data
+    out_node_id = dpg.get_item_parent(out_attr)
+    in_node_id = dpg.get_item_parent(in_attr)
+
+    # Search for the node instance in EDITOR_NODES
+    out_node = next((n for n in oxyapi.editor_nodes if out_node_id in n.node_ids), None)
+    in_node = next((n for n in oxyapi.editor_nodes if in_node_id in n.node_ids), None)
+
+    if not out_node or not in_node:
+        print("Error: Failed to find linked nodes!")
+        return
+
+    link_id = dpg.add_node_link(out_attr, in_attr, parent=sender)
+    conn = node_manager.Connection(link_id, in_attr, out_attr, in_node, out_node)
+    oxyapi._node_manager.add_connection(conn)
 
 def node_unlink_handler(sender, app_data):
     print("UNLINK:", app_data)
     dpg.delete_item(app_data)
+    oxyapi._node_manager.delete_connection(app_data)
 
-def add_node(sender, idk, data):
-    data.node_add("nodeeditor")
+def add_node(sender, data, user_data):
+    new_node = user_data.__class__()
+    new_node.node_add("nodeeditor")
+    oxyapi.editor_nodes.append(new_node) 
 
 checking = False
 
@@ -182,6 +216,9 @@ def chunks(lst: list[str], n: int):
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
+def on_compile_nodes():
+    print(oxyapi._node_manager.compile())
+
 with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=True,no_move=True,no_resize=True,on_close=exit, no_title_bar=True) as win:
     # dpg.add_text("Smaller text")
     with dpg.group(horizontal=True):
@@ -214,7 +251,8 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
             with dpg.group(tag="tab_2", show=current_tab==2):
                 with dpg.group(horizontal=True):
                     add_node_button = dpg.add_button(label="Add node")
-                    dpg.add_button(label="Convert nodes to plugin")
+                    dpg.add_button(label="Convert nodes to plugin", callback=on_compile_nodes)
+                    dpg.add_input_text(label="Service name", width=160)
                 with dpg.popup(add_node_button, modal=True, mousebutton=dpg.mvMouseButton_Left, tag="add_node_modal", no_move=True, min_size=[width-300, height-200]):
                     dpg.add_text("Select node")
                     for category, nodes in oxyapi.node_storage.items():
@@ -223,14 +261,15 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
                                 dpg.add_button(label=node.name, callback=add_node, user_data=node)
                 with dpg.node_editor(tag="nodeeditor",callback=node_link_handler, 
                              delink_callback=node_unlink_handler, minimap=True, minimap_location=dpg.mvNodeMiniMap_Location_BottomRight) as ne:
-                    with dpg.node(label="Account", pos=[10, 10]) as main_node:
-                        with dpg.popup(main_node):
-                            dpg.add_text("Add node")
-                        with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
-                            dpg.add_text("On Valid")
+                    # with dpg.node(label="Account", pos=[10, 10]) as main_node:
+                    #     with dpg.popup(main_node):
+                    #         dpg.add_text("Add node")
+                    #     with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
+                    #         dpg.add_text("On Valid")
 
-                        with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
-                            dpg.add_text("On Invalid")
+                    #     with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Output):
+                    #         dpg.add_text("On Invalid")
+                    oxyapi.node_storage["Account"][0].node_add(ne)
 
             with dpg.group(tag="tab_3", show=current_tab==3):
                 dpg.add_text("Creators: белочка & ночь")
@@ -259,7 +298,12 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
                 for plugin in oxyapi.plugin_storage:
                     if plugin.setup_ui == None: continue
                     dpg.add_separator(label=plugin.name)
-                    plugin.setup_ui()
+                    try:
+                        plugin.setup_ui()
+                    except Exception as ex:
+                        import traceback
+                        dpg.add_text(f"Failed to setup ui! {ex}", color=(255,0,0,255))
+                        traceback.print_exception(ex)
     
 
 

@@ -1,7 +1,7 @@
 import importlib
 import os
 import typing
-from utils import eventit, logsearch
+from utils import eventit, logsearch, node_manager
 import dearpygui.dearpygui as dpg
 
 __version_major__ = 0
@@ -32,10 +32,11 @@ class OxyNode:
             OxyNodeAttr("Output 1", dpg.mvNode_Attr_Output),
             OxyNodeAttr("Output 2", dpg.mvNode_Attr_Output),
         ]
+        self.node_ids = []
 
     def node_add(self, parent):
         print(f"Adding {self.name} to node editor")
-        with dpg.node(label=self.name, pos=[300, 10], parent=parent):
+        with dpg.node(label=self.name, parent=parent) as new_node_id:
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
                 # dpg.add_input_text(label="Variable", width=140)
                 dpg.add_text(self.description)
@@ -43,6 +44,8 @@ class OxyNode:
             for attr in self.attrs:
                 with dpg.node_attribute(attribute_type=attr.type):
                     dpg.add_text(attr.name)
+            self.node_ids.append(new_node_id)
+            
 
     @staticmethod
     def call(*args):
@@ -68,6 +71,12 @@ class OxyPlugin:
 
 plugin_storage: list[OxyPlugin] = []
 node_storage: typing.Dict[str, list[OxyNode]] = {}
+_node_manager = node_manager.NodeManager()
+
+_check_acc: AccountResult = None
+_check_acc_isValid: bool = None
+
+editor_nodes = []
 
 _plugin_init_problems = 0
 _before_load_reached = False
@@ -96,9 +105,11 @@ def __oxy_import__(path: str):
         plugin.warn = True
         plugin.tooltip = f"Incompatible api version (Plugin api: {plugin.api_version} | Current api: {__version_major__}.{__version_minor__})!"
 
-    has_ui_setup = hasattr(plugin, "setup_ui")
+    has_ui_setup = hasattr(m, "setup_ui")
     if has_ui_setup:
         plugin.setup_ui = m.setup_ui
+    # else:
+    #     print(f"Plugin {plugin.name} has no setup_ui")
     print(f"Loaded plugin: {plugin.name} {m.__version__} by {plugin.author}")
     plugin_storage.append(plugin)
 

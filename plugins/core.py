@@ -1,4 +1,5 @@
 """Oxygen Checker built-in plugin | Basic nodes and etc. You can use this plugin as example for your plugins :3"""
+import typing
 import oxyapi
 import dearpygui.dearpygui as dpg
 import configparser
@@ -38,7 +39,7 @@ class PrintNode(oxyapi.OxyNode):
             oxyapi.OxyNodeAttr("Input")
         ]
 
-    def call(input):
+    def call(input: typing.Any):
         print(input)
 
 class AppendToFile(oxyapi.OxyNode):
@@ -138,30 +139,6 @@ class String(oxyapi.OxyNode):
     def call(input: None):
         print(input)
 
-class ServiceFilter(oxyapi.OxyNode):
-    def __init__(self):
-        super().__init__()
-        self.name = "Service Filter"
-        self.description = "~_~"
-        self.attrs = [
-            oxyapi.OxyNodeAttr("Value", dpg.mvNode_Attr_Output)
-        ]
-
-    def node_add(self, parent):
-        print(f"Adding {self.name} to node editor")
-        with dpg.node(label=self.name, pos=[300, 10], parent=parent):
-            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
-                dpg.add_text(self.description)
-                dpg.add_input_text(label="String", width=140)
-
-            for attr in self.attrs:
-                with dpg.node_attribute(attribute_type=attr.type):
-                    dpg.add_text(attr.name)
-    
-    @staticmethod
-    def call(input: None):
-        print(input)
-
 class TrueFilter(oxyapi.OxyNode):
     def __init__(self):
         super().__init__()
@@ -221,8 +198,9 @@ class POSTRequest(oxyapi.OxyNode):
         ]
     
     @staticmethod
-    def call(input: None):
-        print(input)
+    def call(when: typing.Any):
+        # print(input)
+        ...
 
 @oxyapi.event_handler.on_event
 def ui_init():
