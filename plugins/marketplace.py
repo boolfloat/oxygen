@@ -49,7 +49,7 @@ def setup_ui():
                     dpg.bind_item_font(h, oxyapi.big_font)
                 with dpg.group(horizontal=False, width=100):
                     dpg.add_button(label="Download", user_data=plugin["id"], callback=dl_plugin)
-                    dpg.add_button(label="Copy link")
+                    dpg.add_button(label="Open link", callback=lambda: webbrowser.open_new_tab(f"http://oxy.strnq.xyz/market/get_plugins/{plugin['id']}"))
 
     dpg.add_button(label="View projects")
     with dpg.popup(dpg.last_item(), dpg.mvMouseButton_Left, True):
