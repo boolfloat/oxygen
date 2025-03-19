@@ -179,3 +179,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+Projects/Spotify_old.json
+Projects/Spotify_NEW.json
+Logs/*
+*.exe

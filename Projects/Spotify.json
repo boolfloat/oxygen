@@ -44,6 +44,13 @@
                 "after": "currentPlan\":\"",
                 "before": "\",",
                 "method": "GET"
+            },
+            "value_3": {
+                "name": "pass_req",
+                "url": "https://www.spotify.com/api/account-settings/v1/profile",
+                "after": ",\"is_password_required_on_email_change\":",
+                "before": ",\"",
+                "method": "GET"
             }
         }
     }

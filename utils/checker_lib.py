@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CheckResult:
     """Class for storing check results"""
+    project_name: str
     status: str
     values: Dict[str, str] = None
     error: str = None
@@ -103,7 +104,7 @@ class FastChecker:
                     added += 1
             
             if added == 0:
-                print("No cookies added")
+                # print("No cookies added")
                 raise Exception("No cookies")
             # Main request
             response = session.request(
@@ -156,6 +157,7 @@ class FastChecker:
                         result[f"{value_config['name']}_error"] = str(e)
             
             return CheckResult(
+                project_name=self.config["projectSettings"]["projectName"],
                 status=result["status"],
                 values=result,
                 check_time=time.time() - start_time,

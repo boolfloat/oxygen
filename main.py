@@ -1,5 +1,6 @@
 import importlib
 import os
+import sys
 import win32gui
 import ctypes
 import time
@@ -35,6 +36,7 @@ class MARGINS(ctypes.Structure):
               ("cyBottomHeight", c_int)
              ]
 
+sys.path.append(os.getcwd()) 
 
 viewport = dpg.create_viewport(title="Oxygen Checker",width=width,height=height,decorated=False,resizable=False,clear_color=[0.0,0.0,0.0,0.0])
 

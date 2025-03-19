@@ -3,9 +3,6 @@ import webbrowser
 import requests
 import oxyapi
 import dearpygui.dearpygui as dpg
-import configparser
-import json
-import os
 
 __oxy_name__ = "Marketplace"
 __description__ = "Get projects and plugins for Oxygen!"
