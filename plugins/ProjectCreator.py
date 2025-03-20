@@ -6,6 +6,7 @@ import requests
 import os
 from urllib.parse import urlparse
 import configparser
+import oxyapi
 
 __oxy_name__ = "Project Creator"
 __description__ = "Cookie project creator with parser functionality"
@@ -411,7 +412,10 @@ class ParserValue:
                         break
 
 def setup_ui():
-    dpg.add_button(label="Open Creator", callback=lambda: dpg.configure_item("ProjectCreator", show=True))
+    def pidoras():
+        oxyapi.in_modal = True
+        dpg.configure_item("ProjectCreator", show=True)
+    dpg.add_button(label="Open Creator", callback=pidoras)
     creator = CookieProjectCreator()
 
 if __name__ == "__main__":

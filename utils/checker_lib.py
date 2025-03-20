@@ -166,6 +166,7 @@ class FastChecker:
             
         except Exception as e:
             return CheckResult(
+                project_name=self.config["projectSettings"]["projectName"],
                 status="error",
                 error=str(e),
                 check_time=time.time() - start_time
@@ -199,6 +200,7 @@ class FastChecker:
                     results.append(result)
                 except Exception as e:
                     results.append(CheckResult(
+                        project_name=self.config["projectSettings"]["projectName"],
                         status="error",
                         error=f"Check error: {str(e)}"
                     ))

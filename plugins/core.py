@@ -264,8 +264,12 @@ def on_telemetry():
     # dpg.push_container_stack("123")
     raise NotImplementedError()
 
+def dg_state_reset():
+    oxyapi.in_modal = False
+
 def setup_ui():
     dpg.add_checkbox(label="Telemetry", callback=on_telemetry)
+    dpg.add_button(label="Drag state reset", callback=dg_state_reset)
     dpg.add_button(label="Show full credits")
     with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left, modal=True, tag="core_modal", no_move=True):
         noch_text = dpg.add_text("ночь")

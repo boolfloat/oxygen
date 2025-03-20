@@ -183,3 +183,4 @@ Projects/Spotify_old.json
 Projects/Spotify_NEW.json
 Logs/*
 *.exe
+plugins/tg_alert.*

@@ -52,6 +52,7 @@ def extract_cookies(lines: list[str]) -> list[Cookie]:
     # print(lines)
     for line in lines:
         if line == "": continue
+        if not "TRUE" in line or not "FALSE" in line: continue
         if line.split("\t")[1] in ("TRUE", "FALSE") and line.split("\t")[2] == "/":
             l = line.split("\t")
             if len(l) == 6: continue
@@ -108,6 +109,7 @@ def parse_logs(path: str):
                     l = extract_cookies(netscape)
                 except Exception as e:
                     print("Failed to parse", cookies_file, e)
+                    continue
                 res = []
                 for cookie in l:
                     # if ".spotify" in cookie.url:

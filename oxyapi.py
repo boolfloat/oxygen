@@ -73,6 +73,7 @@ plugin_storage: list[OxyPlugin] = []
 node_storage: typing.Dict[str, list[OxyNode]] = {}
 _node_manager = node_manager.NodeManager()
 
+tabs_registry: list[list[str, typing.Callable]] = []
 _check_acc: AccountResult = None
 _check_acc_isValid: bool = None
 
@@ -80,12 +81,14 @@ editor_nodes = []
 
 _plugin_init_problems = 0
 _before_load_reached = False
+_sidebar_init = False
 
 logs_folder = ""
 loaded_cookies: list[list[logsearch.Cookie]] = []
 selected_project: list[str] = []
 
 texture_registry = None
+in_modal = False
 
 default_font = None
 small_font = None
@@ -117,6 +120,13 @@ def __oxy_ui_init__():
     """NOT FOR PLUGIN USE"""
     event_handler.call_event("ui_init")
 
+def __oxy_sidebar_init__():
+    """NOT FOR PLUGIN USE"""
+    global _sidebar_init
+    event_handler.call_event("sidebar_init")
+    _sidebar_init = True
+    print("Sidebar inited")
+
 def __oxy_before_load__():
     """NOT FOR PLUGIN USE"""
     global _before_load_reached
@@ -138,6 +148,41 @@ def oxy_register_node(node: OxyNode, category: str):
     node_storage.get(category).append(node)
     print(f"Registered node {node.name} ({category})")
 
+def oxy_register_tab(tab_id: str, setup: typing.Callable):
+    if _sidebar_init:
+        print(f"Cant register tab {tab_id} after sidebar init")
+        return
+    tabs_registry.append([tab_id, setup])
+    print(f"Registered tab {tab_id}")
+
+current_tab = 1
+current_custom_tab = None
+
+def change_tab(tab_id: str = None, tab_number=None):
+    global current_tab, current_custom_tab
+    if current_custom_tab != None:
+        dpg.configure_item(current_custom_tab, show=False)
+    if tab_number != None:
+        current_tab = tab_number
+        current_custom_tab = None
+        # print(f"Changing tab {tab_number}")
+        dpg.configure_item(f"tab_{current_tab}", show=True)
+        for i in range(1, 4):
+            if i != current_tab:
+                dpg.configure_item(f"tab_{i}", show=False)
+    else:
+        current_tab = -1
+        current_custom_tab = tab_id
+        # print(f"Changing tab {tab_id}")
+        dpg.configure_item(tab_id, show=True)
+        for i in range(1, 4):
+            dpg.configure_item(f"tab_{i}", show=False)
+
+def __oxy_tabs_setup__():
+    for tab_entry in tabs_registry:
+        with dpg.group(tag=tab_entry[0], show=False):
+            tab_entry[1]()
+
 def __oxy__():
     """NOT FOR PLUGIN USE"""
     global init, texture_registry
@@ -145,6 +190,7 @@ def __oxy__():
     texture_registry = dpg.texture_registry()
     event_handler.register_event("before_load")
     event_handler.register_event("ui_init")
+    event_handler.register_event("sidebar_init")
     event_handler.register_event("valid_account")
     event_handler.register_event("invalid_account")
     event_handler.register_event("exit")

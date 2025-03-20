@@ -11,6 +11,16 @@ import oxyapi
 from fonts.IconsFontAwesome6 import IconsFontAwesome6 as icons
 from utils import logsearch, checker_lib, node_manager
 import webbrowser
+__o_fd = dpg.file_dialog
+
+def fd_hook(*args, **kwargs):
+    oxyapi.in_modal = True
+    return __o_fd(*args, **kwargs)
+
+def cb_modal():
+    oxyapi.in_modal = False
+
+dpg.file_dialog = fd_hook
 
 dwm = ctypes.windll.dwmapi
 
@@ -101,21 +111,11 @@ with dpg.theme() as global_theme:
     #     dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (140, 255, 23), category=dpg.mvThemeCat_Core)
     #     dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5, category=dpg.mvThemeCat_Core)
 
-current_tab = 1
-
 def update_global():
     # current_time = f"tab 1 {time.time()}"
     # dpg.set_value("time_text", current_time)
     # print(oxyapi._node_manager.connections)
     ...
-
-def cange_tab(tab_number):
-    global current_tab
-    current_tab = tab_number
-    dpg.configure_item(f"tab_{current_tab}", show=True)
-    for i in range(1, 4):
-        if i != current_tab:
-            dpg.configure_item(f"tab_{i}", show=False)
 
 def node_link_handler(sender, app_data):
     out_attr, in_attr = app_data
@@ -198,8 +198,9 @@ def select_logs_folder():
         oxyapi.oxy_append_line_to_results(plog[0])
         oxyapi.loaded_cookies = plog[1]
         oxyapi.logs_folder = directory
+        oxyapi.in_modal = False
     print("Selecting logs folder...")
-    with dpg.file_dialog(label="Select path with cookies", callback=fs_cb, modal=True, directory_selector=True, user_data=True):
+    with dpg.file_dialog(label="Select path with cookies", callback=fs_cb, modal=True, directory_selector=True, user_data=True, cancel_callback=cb_modal):
         pass
     # oxyapi.logs_folder = "123"
 
@@ -228,12 +229,13 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
             logo = dpg.add_text("Oxygen")
             oxyapi.__oxy_ui_init__()
             dpg.bind_item_font(logo, big_font)
-            dpg.add_button(label="Checker", height=50, callback=lambda: cange_tab(1))
-            dpg.add_button(label="Node editor", height=50, callback=lambda: cange_tab(2))
-            dpg.add_button(label="Settings", height=50, callback=lambda: cange_tab(3))
+            dpg.add_button(label="Checker", height=50, callback=lambda: oxyapi.change_tab(tab_number=1))
+            dpg.add_button(label="Node editor", height=50, callback=lambda: oxyapi.change_tab(tab_number=2))
+            dpg.add_button(label="Settings", height=50, callback=lambda: oxyapi.change_tab(tab_number=3))
+            oxyapi.__oxy_sidebar_init__()
             
         with dpg.group(horizontal=False):
-            with dpg.group(tag="tab_1", show=current_tab==1):
+            with dpg.group(tag="tab_1", show=oxyapi.current_tab==1):
                 with dpg.group():
                     with dpg.group(horizontal=True, width=159, height=40):
                         dpg.add_button(label="Select path", callback=select_logs_folder)
@@ -250,7 +252,7 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
                                 dpg.add_checkbox(label=proj.rstrip(".json"), user_data=proj, callback=on_proj_checkbox)
                 with dpg.group(pos=[width-670, height-220]):
                     dpg.add_input_text(default_value="Loaded Oxygen Checker\n",multiline=True, readonly=True, width=width-240, height=200, tag="check_result")
-            with dpg.group(tag="tab_2", show=current_tab==2):
+            with dpg.group(tag="tab_2", show=oxyapi.current_tab==2):
                 with dpg.group(horizontal=True):
                     add_node_button = dpg.add_button(label="Add node")
                     dpg.add_button(label="Convert nodes to plugin", callback=on_compile_nodes)
@@ -273,11 +275,11 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
                     #         dpg.add_text("On Invalid")
                     oxyapi.node_storage["Account"][0].node_add(ne)
 
-            with dpg.group(tag="tab_3", show=current_tab==3):
+            with dpg.group(tag="tab_3", show=oxyapi.current_tab==3):
                 dpg.add_text("Creators: белочка & ночь")
                 dpg.add_text(f"Loaded {len(oxyapi.plugin_storage)} plugins")
                 dpg.add_button(label="Plugin list", height=30)
-                with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left, modal=True, tag="plugin_modal", no_move=True, min_size=[width-300, height-300]):
+                with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left, modal=True, tag="plugoxyapi.in_modal", no_move=True, min_size=[width-300, height-300]):
                     for plugin in oxyapi.plugin_storage:
                         with dpg.group(horizontal=True):
                             if plugin.icon:
@@ -306,46 +308,44 @@ with dpg.window(label="Frameless Window",width=width,height=height,no_collapse=T
                         import traceback
                         dpg.add_text(f"Failed to setup ui! {ex}", color=(255,0,0,255))
                         traceback.print_exception(ex)
-    
+            oxyapi.__oxy_tabs_setup__()
 
 
 dpg.bind_theme(global_theme)
 
 _hold_fix = False
+pos_buf = [0, 0]
 
 def cal_dow(sender,data):
     global title_bar_drag, _hold_fix
-    if dpg.is_mouse_button_down(0):
-        x = data[0]
-        y = data[1]
-        if _hold_fix:
-            title_bar_drag = True
-        else:
-            title_bar_drag = False
-            _hold_fix = False
-    
+    # print(oxyapi.in_modal)
+    if dpg.is_mouse_button_down(0) and title_bar_drag and not oxyapi.in_modal:
+        dpg.configure_viewport(viewport,x_pos=pos_buf[0],y_pos=pos_buf[1])
 def cal(sender,data):
-    global title_bar_drag
-    if title_bar_drag:
+    global title_bar_drag, pos_buf
+    if title_bar_drag and dpg.is_mouse_button_down(0):
         pos = dpg.get_viewport_pos()
         x = data[1]
         y = data[2]
         final_x = pos[0]+x
         final_y = pos[1]+y
-        dpg.configure_viewport(viewport,x_pos=final_x,y_pos=final_y)
+        # print(x, y)
+        pos_buf = [final_x, final_y]
+        # dpg.configure_viewport(viewport,x_pos=final_x,y_pos=final_y)
+        # title_bar_drag = False
 
 def drag_fix():
-    global _hold_fix
+    global title_bar_drag
     # _hold_fix = True
     data = dpg.get_mouse_pos()
     x = data[0]
     y = data[1]
 
     if y <= 20:
-        # print()
-        _hold_fix = True
+        # print("Penis")
+        title_bar_drag = True
     else:
-        _hold_fix = False
+        title_bar_drag = False
     
 with dpg.handler_registry():
     dpg.add_mouse_drag_handler(0,callback=cal)
