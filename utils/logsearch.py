@@ -52,7 +52,7 @@ def extract_cookies(lines: list[str]) -> list[Cookie]:
     # print(lines)
     for line in lines:
         if line == "": continue
-        if not "TRUE" in line or not "FALSE" in line: continue
+        if not "TRUE" in line and not "FALSE" in line: continue
         if line.split("\t")[1] in ("TRUE", "FALSE") and line.split("\t")[2] == "/":
             l = line.split("\t")
             if len(l) == 6: continue
